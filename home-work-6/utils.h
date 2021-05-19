@@ -4,13 +4,14 @@
 
 #include <limits>
 #include <cstdint>
-//#include <cstdlib>
 #include <cmath>
 #include <iostream>
 #include <fstream>
 #include <functional>
 #include <string>
 #include <fstream>
+
+namespace utils {
 
 using std::cout;
 using std::cin;
@@ -21,6 +22,7 @@ using std::ostream;
 using std::ofstream;
 using std::ifstream;
 using std::function;
+using std::nothrow;
 
 constexpr auto CIN_MAX = std::numeric_limits<std::streamsize>::max();
 
@@ -44,7 +46,7 @@ constexpr uint8_t reqBits(const T num) {
 }
 
 uint64_t maxNumByBits(uint8_t nbits) {
-	return static_cast<uint64_t>(pow(2, nbits));
+	return static_cast<uint64_t>(pow(2, nbits) - 1);
 }
 
 // (ceiling (log (1- (expt 2 (* 8 8))) 10))
@@ -56,13 +58,37 @@ constexpr uint8_t getDigits10() {
 }
 //// end Bits handling
 
-//// Memory
+//// Memory, matrix utils
+template<typename T, typename TSize = size_t>
+T** allocMatrix(TSize m, TSize n) {
+	T** res = new (nothrow) T * [m];
+	if (!res) {
+		error("failed alloc memory for matrix columns");
+	}
+	else {
+		for (size_t i = 0; i < m; ++i) {
+			res[i] = new (nothrow) T[n];
+			if (!res[i])
+				error("failed alloc memory for matrix rows");
+		}
+	}
+	return res;
+}
+
 template<typename T>
 void freeMatrix(T** ar, size_t m) {
 	for (size_t i = 0; i < m; ++i) {
 		delete[] ar[i];
 	}
 	delete[] ar;
+}
+
+template<typename T>
+void fillMatrix(T** ar, size_t m, size_t n, function<T()> fnGenerator) {
+	for (size_t i = 0; i < m; ++i) {
+		for (size_t j = 0; j < n; ++j)
+			ar[i][j] = fnGenerator();
+	}
 }
 
 // Deleters
@@ -82,7 +108,6 @@ struct DeleterArray {
 		delete[] ptr;
 	}
 };
-
 
 struct DeleterMatrix {
 	void** pptr = nullptr;
@@ -206,8 +231,19 @@ int randInt() {
 		}
 		if (obit > 0) {
 			int restRnd = rand();
-			res |= (restRnd % maxNum) << gbit * nbit;
+			res |= (restRnd % (maxNum + 1)) << gbit * nbit;
 		}
 	}
 	return res;
 }
+
+// Input utils
+template<typename T>
+void askValue(const string& reqMsg, T& res) {
+	cout << reqMsg;
+	cin >> res;
+	cin.clear();
+	cin.ignore(CIN_MAX, '\n');
+}
+
+} // namespace utils

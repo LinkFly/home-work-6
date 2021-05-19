@@ -24,12 +24,21 @@ using std::ostream;
 using std::ifstream;
 using std::ofstream;
 
+using namespace utils;
+
 using std::ios;
+
+namespace main_module {
+	static string file1;
+	static string file2;
+	static const string txtExt = ".txt";
+}
 
 template<typename T>
 void outArray(T* elem, size_t arSize, uint8_t space = 2) {
     ios state(nullptr);
     state.copyfmt(cout);
+
     if (arSize == 0)
         return;
     auto align = getDigits10<T>() + space;
@@ -53,14 +62,6 @@ void outArray(T** arOfAr, size_t m, size_t n) {
         outArray(arOfAr[i], n);
 }
 
-template<typename T>
-void askValue(const string& reqMsg, T& res) {
-	cout << reqMsg;
-	cin >> res;
-	cin.clear();
-	cin.ignore(CIN_MAX, '\n');
-}
-
 size_t askArraySize() {
     size_t res;
     askValue("Please enter array of integer size: ", res);
@@ -73,34 +74,11 @@ string askFile(const string& reqMsg) {
     return res;
 }
 
-template<typename T, typename TSize = size_t>
-T** allocMatrix(TSize m, TSize n) {
-	T** res = new (nothrow) T * [m];
-	if (!res) {
-		error("failed alloc memory for matrix columns");
-	}
-	else {
-		for (size_t i = 0; i < m; ++i) {
-			res[i] = new (nothrow) T[n];
-			if (!res[i])
-				error("failed alloc memory for matrix rows");
-		}
-	}
-    return res;
-}
-
-template<typename T>
-void fillMatrix(T** ar, size_t m, size_t n, function<T()> fnGenerator) {
-    for (size_t i = 0; i < m; ++i) {
-        for(size_t j = 0; j < n; ++j)
-            ar[i][j] = fnGenerator();
-    }
-}
-
 void fillStream1(ostream& out) {
     randInit();
     ios state(nullptr);
     state.copyfmt(out);
+
     out << std::hex;
     for(int i = 0; i < 5; ++i) {
         for (int j = 0; j < 18; ++j) {
@@ -129,8 +107,6 @@ static auto fnAskFile = [](const string& askMsg, string& file) {
 		file = askFile(askMsg);
 	} while (file.empty());
 };
-
-
 
 void catFiles(const string& resFile, const string& catFile1, const string& catFile2) {
 	ofstream ofile(resFile, ios::binary);
@@ -189,6 +165,7 @@ void task1() {
 		}
         outArray(arInts, arSize);
     }
+
     cout << endl;
 }
 
@@ -203,38 +180,51 @@ void task2() {
     };
     fillMatrix(matrix, rows, cols, fn);
     outArray(matrix, rows, cols);
+
     cout << endl;
 }
 
 void task3() {
-    
     cout << "===== Task 3 =====\n";
     string file1, file2;
     fnAskFile("Please type file1: ", file1);
     fnAskFile("Please type file2: ", file2);
 
-    file1 += Global::txtExt;
-    file2 += Global::txtExt;
-    Global::file1 = file1;
-    Global::file2 = file2;
+    file1 += main_module::txtExt;
+    file2 += main_module::txtExt;
+    main_module::file1 = file1;
+    main_module::file2 = file2;
 
     fillFile(file1, fillStream1);
     fillFile(file2, fillStream2);
+
+    cout << endl;
 }
-
-
 
 void task4() {
+    cout << "===== Task 4 =====\n";
     string resFile;
     fnAskFile("Enter result file: ", resFile);
-    resFile += Global::txtExt;
-    catFiles(resFile, Global::file1, Global::file2);
+    resFile += main_module::txtExt;
+    catFiles(resFile, main_module::file1, main_module::file2);
+
+    cout << endl;
 }
+
+void task5() {
+	cout << "===== Task 5 =====\n";
+	
+	
+
+	cout << endl;
+}
+
 int main()
 {
-    //task1();
-    //task2();
-    task3();
-    task4();
+    task1();
+    task2();
+	task3();
+	task4();
+    task5();
     pauseExit();
 }
