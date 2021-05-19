@@ -145,6 +145,14 @@ ifstream::pos_type fileSize(const string& filename) {
 	return res;
 }
 
+ifstream::pos_type fileSize(istream& in) {
+	auto oldPos = in.tellg();
+	in.seekg(0, ios::end);
+	auto size = in.tellg();
+	in.seekg(oldPos, ios::beg);
+	return size;
+}
+
 // Cat files
 using FPrepareError = function<void(const string& errMessage, bool bResult)>;
 
@@ -157,7 +165,6 @@ void fileConcat(const string& fileName, ostream& ofile,
 	};
 	// Configure prepared function
 	auto&& fnDefaultErr = fnPreparedErr ? *fnPreparedErr : prepErrStub;
-	auto size = fileSize(fileName);
 	auto& bufSize = Global::READ_FILE_BUFSIZE;
 
 	// Prepared in reference
@@ -170,6 +177,7 @@ void fileConcat(const string& fileName, ostream& ofile,
 		inRef = (*pIn);
 	}
 	auto& in = inRef.get();
+	auto size = fileSize(in);
 
 	// Creating buffer and parts count
 	ios::streampos parts = size / bufSize;
