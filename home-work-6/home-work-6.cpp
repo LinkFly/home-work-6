@@ -3,15 +3,11 @@
 #include "utils.h"
 
 #include <iostream>
-#include <cmath>
 #include <ctime>
 #include <functional>
-#include <conio.h>
 #include <string>
 #include <iomanip>
 #include <fstream>
-#include <algorithm>
-#include <type_traits>
 
 using std::cin;
 using std::cout;
@@ -28,7 +24,7 @@ using namespace utils;
 
 using std::ios;
 
-namespace main_module {
+namespace global_module {
 	static string file1;
 	static string file2;
 	static const string txtExt = ".txt";
@@ -190,10 +186,10 @@ void task3() {
     fnAskFile("Please type file1: ", file1);
     fnAskFile("Please type file2: ", file2);
 
-    file1 += main_module::txtExt;
-    file2 += main_module::txtExt;
-    main_module::file1 = file1;
-    main_module::file2 = file2;
+    file1 += global_module::txtExt;
+    file2 += global_module::txtExt;
+    global_module::file1 = file1;
+    global_module::file2 = file2;
 
     fillFile(file1, fillStream1);
     fillFile(file2, fillStream2);
@@ -205,16 +201,57 @@ void task4() {
     cout << "===== Task 4 =====\n";
     string resFile;
     fnAskFile("Enter result file: ", resFile);
-    resFile += main_module::txtExt;
-    catFiles(resFile, main_module::file1, main_module::file2);
+    resFile += global_module::txtExt;
+    catFiles(resFile, global_module::file1, global_module::file2);
 
     cout << endl;
 }
 
+void forWords(istream& in, function<bool(string& word)> callback) {
+	string word;
+	//askValue("Enter some word: ", word);
+	string maybeWord;
+	vector<string> words;
+	int i = 0;
+	while (!in.eof()) {
+		in >> maybeWord;
+		words.clear();
+		words = trimAndSplit(maybeWord);
+		++i;
+        for (auto& word : words) {
+            bool bContinue = callback(word);
+            if (!bContinue) return;
+        }
+		maybeWord.clear();
+	}
+}
+
 void task5() {
 	cout << "===== Task 5 =====\n";
-	
-	
+    string file = "data-for-task5.txt";
+
+	string findWord;
+	askValue("Enter word for find: ", findWord);
+    string originWord = findWord;
+    downcase(findWord);
+
+    ifstream fin(file);
+	if (!fin) {
+		error("failed open: " + file);
+	}
+    bool bCompareRes = false;
+    auto fnCheckWord = [&findWord, &bCompareRes](string& word) {
+        downcase(word);
+        if (findWord == word) {
+            bCompareRes = true;
+            return false;
+        }
+        return true;
+    };
+    forWords(fin, fnCheckWord);
+
+    cout << "Word '" << originWord << "' is " 
+         << (bCompareRes ? "found" : "not found!");
 
 	cout << endl;
 }

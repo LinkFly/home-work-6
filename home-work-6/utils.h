@@ -10,6 +10,10 @@
 #include <functional>
 #include <string>
 #include <fstream>
+#include <vector>
+#include <sstream>
+#include <cctype>
+#include <algorithm>
 
 namespace utils {
 
@@ -23,6 +27,8 @@ using std::ofstream;
 using std::ifstream;
 using std::function;
 using std::nothrow;
+using std::vector;
+using std::find_if_not;
 
 constexpr auto CIN_MAX = std::numeric_limits<std::streamsize>::max();
 
@@ -36,10 +42,9 @@ void error(const T& errMsg) {
 void pauseExit() {
 	cin.get();
 }
-
 //// end System helpers
 
-//// Bits handling
+//// Bits utils
 template<typename T>
 constexpr uint8_t reqBits(const T num) {
 	return static_cast<uint8_t>(ceil(log2(num + 1)));
@@ -56,7 +61,7 @@ constexpr uint8_t getDigits10() {
 	auto res = static_cast<uint8_t>(ceil(log10(maxNum)));
 	return res + std::numeric_limits<T>::is_signed;
 }
-//// end Bits handling
+//// end Bits utils
 
 //// Memory, matrix utils
 template<typename T, typename TSize = size_t>
@@ -90,8 +95,9 @@ void fillMatrix(T** ar, size_t m, size_t n, function<T()> fnGenerator) {
 			ar[i][j] = fnGenerator();
 	}
 }
+//// end Memory, matrix utils
 
-// Deleters
+//// Deleters
 struct Deleter {
 	void* ptr = nullptr;
 	Deleter() = default;
@@ -120,8 +126,9 @@ struct DeleterMatrix {
 		freeMatrix(pptr, rows);
 	}
 };
+//// end Deleters
 
-//// Files
+//// Files utils
 void checkOpen(const string& file, const ofstream& ofile) {
 	if (!ofile.is_open()) {
 		error(string{ "Failed to open file: " } + file);
@@ -209,9 +216,9 @@ void fileConcat(const string& fileName, ostream& ofile,
 		in.seekg(curPos);
 	}
 };
-//// end Files
+//// end Files utils
 
-//// Randoms
+//// Randoms utils
 bool randInit() {
 	std::srand(static_cast<unsigned>(std::time(nullptr)));
 	return true;
@@ -244,6 +251,7 @@ int randInt() {
 	}
 	return res;
 }
+//// end Randoms utils
 
 // Input utils
 template<typename T>
@@ -253,5 +261,53 @@ void askValue(const string& reqMsg, T& res) {
 	cin.clear();
 	cin.ignore(CIN_MAX, '\n');
 }
+
+//// Strings utils
+bool checkingForBad(char ch, char* badChars, int badCharsSize) {
+	for (int i = 0; i < badCharsSize; ++i) {
+		if (ch == badChars[i])
+			return true;
+	}
+	return false;
+};
+
+void split(const string& str, vector<string>& strs, char* delims, int delimsSize) {
+	string cur;
+	for (char ch : str) {
+		if (checkingForBad(ch, delims, delimsSize)) {
+			if (!cur.empty())
+				strs.push_back(cur);
+			cur.clear();
+		}
+		else {
+			cur += ch;
+		}
+	}
+	if (!cur.empty())
+		strs.push_back(cur);
+}
+
+string trim(const string& str, char* badChars, int badCharsSize) {
+	auto fnCheckingForBad = [&badChars, badCharsSize](char c) {
+		return checkingForBad(c, badChars, badCharsSize);
+	};
+	auto newStart = find_if_not(str.begin(), str.end(), fnCheckingForBad);
+	auto newEnd = find_if_not(str.rbegin(), str.rend(), fnCheckingForBad).base();
+	return newEnd <= newStart ? string{} : string{ newStart, newEnd };
+}
+vector<string> trimAndSplit(const string& str) {
+	char badChars[] = { ',', '.', '-', '_', '(', ')', ' ' };
+	auto pureStr = trim(str, badChars, sizeof(badChars));
+	vector<string> splitted;
+	split(pureStr, splitted, badChars, sizeof(badChars));
+	return splitted;
+}
+
+void downcase(string& str) {
+	std::transform(str.begin(), str.end(), str.begin(), [](char c) {
+		return std::tolower(c);
+		});
+}
+//// end Strings utils
 
 } // namespace utils
